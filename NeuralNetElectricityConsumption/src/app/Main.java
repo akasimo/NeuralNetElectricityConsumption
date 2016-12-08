@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.NeuralNet.model.TrainingData;
 import com.NeuralNet.service.LoadSaveNNSService;
@@ -14,6 +16,7 @@ import model.Timer;
 import service.ElectricityConsumptionParser;
 import service.WUForecastParserService;
 import service.WUParserService;
+import service.WeatherLoaderService;
 
 public class Main {
 
@@ -39,7 +42,7 @@ public class Main {
 			System.out.print(o + " ");			
 		}*/
 	  	
-	  	NeuralNetworkService nns = new NeuralNetworkService(3,3);
+	  	/*NeuralNetworkService nns = new NeuralNetworkService(3,3);
 		nns.appendLayer(5);
 		
 		System.out.println("Calculating ../..");
@@ -67,7 +70,57 @@ public class Main {
 		}
 		
 		timer.endMeasure();
-		System.out.println("\nEnlapsed Time: " + timer.enlapsedTime()/1000.00 + "s");	
+		System.out.println("\nEnlapsed Time: " + timer.enlapsedTime()/1000.00 + "s");*/	
+	  	
+	  	loadData(2015, 5, "2016-12-06");
+	}
+	
+	private static void loadData(Integer weatherYear, Integer numberOfYears, String weatherDate)
+	{
+		//parseWeatherForecast("https://api-ak-aws.wunderground.com/api/c991975b7f4186c0/forecast10day/hourly10day/lang:EN/units:metric/v:2.0/bestfct:1/q/zmw:21201.1.99999.json", "WeatherForecast/Baltimore");
+		parseWeatherForecast("https://api-ak-aws.wunderground.com/api/c991975b7f4186c0/forecast10day/hourly10day/lang:EN/units:metric/v:2.0/bestfct:1/q/zmw:21044.1.99999.json", "WeatherForecast/Columbia");
+		WeatherLoaderService wls = new WeatherLoaderService();
+		List<Object[]> dailyWeatherForecast = wls.getDailyWeather(weatherDate, "WeatherForecast/Columbia_WeatherForecast.json");
+		ArrayList<List<Object[]>> dailyWeatherHistoryAllYears = new ArrayList<List<Object[]>>();
+		List<Object[]> dailyECHistoryAllYears = new ArrayList<Object[]>();
+		String[] weatherDateArray = weatherDate.split("-");
+		
+		for(int i = 0; i < numberOfYears; i++)
+		{
+			dailyWeatherHistoryAllYears.add(wls.getDailyWeather(weatherYear + "-" + weatherDateArray[1] + "-" + weatherDateArray[2], "WeatherHistory/Columbia/Columbia_" + weatherYear + "_HistoricWeather.json"));
+			dailyECHistoryAllYears.add(wls.getDailyECHistory(weatherYear + "-" + weatherDateArray[1] + "-" + weatherDateArray[2], "ElectricityConsumption/BC_" + weatherYear + "ElectricityConsumption.json"));
+			weatherYear--;
+		}
+		
+		System.out.println();
+		
+		// For all 24 hours
+		for(int i = 0; i < dailyWeatherForecast.size(); i++)
+		{
+			System.out.println("Weather Forecast:\n");
+			
+			// Get all weather forecast measurements for one hour
+			for(int j = 0; j < dailyWeatherForecast.get(i).length; j++)
+			{
+				System.out.printf("%9s", dailyWeatherForecast.get(i)[j]);
+			}
+			
+			System.out.println("\n\nWeather History:\n");
+			
+			// Get all weather history & electricity consumption measurements for one hour for "numberOfYears" years
+			for(int j = 0; j < numberOfYears; j++)
+			{
+				// Get all weather history & electricity consumption measurements for one hour
+				for(int k = 0; k < dailyWeatherHistoryAllYears.get(j).get(i).length; k++)
+				{
+					System.out.printf("%9s", dailyWeatherHistoryAllYears.get(j).get(i)[k]);
+				}
+								
+				System.out.printf("%12s\n", dailyECHistoryAllYears.get(j)[i]);				
+			}
+			
+			System.out.println("--------------------------------------------------------------");			
+		}
 	}
 	
 	private static String readFile(String path, Charset encoding) throws IOException 
@@ -100,16 +153,15 @@ public class Main {
 		ecp.parseBCYearlyEC(2011, "PEPCOEC2011.csv", "ElectricityConsumption/PEP");
 	}
 	
-	private static void parseWeatherForecast()
+	private static void parseWeatherForecast(String weatherForecastLink, String fileSaveDestination)
 	{
 		WUForecastParserService wufps = new WUForecastParserService();
 		
 		// String forecastLink = "https://api-ak-aws.wunderground.com/api/c991975b7f4186c0/forecast10day/hourly10day/lang:EN/units:metric/v:2.0/bestfct:1/q/zmw:21201.1.99999.json"; // Baltimore
 		// String forecastLink = "https://api-ak-aws.wunderground.com/api/c991975b7f4186c0/forecast10day/hourly10day/lang:EN/units:metric/v:2.0/bestfct:1/q/zmw:21044.1.99999.json"; // Columbia		
-		String forecastLink = "https://api-ak-aws.wunderground.com/api/c991975b7f4186c0/forecast10day/hourly10day/lang:EN/units:metric/v:2.0/bestfct:1/q/zmw:21146.1.99999.json"; // Severna Park
+		// String forecastLink = "https://api-ak-aws.wunderground.com/api/c991975b7f4186c0/forecast10day/hourly10day/lang:EN/units:metric/v:2.0/bestfct:1/q/zmw:21146.1.99999.json"; // Severna Park
 		
-		wufps.parseWeatherForecast(forecastLink, "WeatherForecast/SevernaPark");
+		wufps.parseWeatherForecast(weatherForecastLink, fileSaveDestination);
 	}
 	
-
 }
