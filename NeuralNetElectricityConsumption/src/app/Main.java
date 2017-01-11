@@ -187,15 +187,15 @@ public class Main {
 		
 		List<Object> predictionResultList = new ArrayList<Object>();
 		Object predicitionResult = null;
-						
+		Timer timer = new Timer();
+					
+		NeuralNetworkService nns = new NeuralNetworkService(5,1);
+	  	nns.appendLayer(5);
+		
 		for(int k = 0; k < normalizedInputHourlyWeatherHistory.size(); k++)
-		{
-			Timer timer = new Timer();
+		{			
 		  	timer.startMeasure();
-		  	
-			NeuralNetworkService nns = new NeuralNetworkService(5,1);
-		  	nns.appendLayer(5);
-			
+		  							
 			for(int i = 0; i < 5000; i++)
 			{
 				nns.backpropagate(new TrainingData(normalizedInputHourlyWeatherHistory.get(k), new Object[]{normalizedInputHourlyElectricityConsumption[k]}), 2, 3, false);
@@ -214,7 +214,6 @@ public class Main {
 			System.out.println("Enlapsed Time: " + timer.enlapsedTime()/1000.00 + "s");
 		}
 		
-		NeuralNetworkService nns = new NeuralNetworkService();
 		Object averagePredictionResult = 0.;
 		
 		for(Object o : predictionResultList)
@@ -392,15 +391,15 @@ public class Main {
 				
 		List<Object> predictionResultList = new ArrayList<Object>();
 		Object predicitionResult = null;
+		Timer timer = new Timer();
+		
+		NeuralNetworkService nns = new NeuralNetworkService(5,1);
+	  	nns.appendLayer(5);
 		
 		for(int k = 0; k < normalizedInputHourlyWeatherHistory.size(); k++)
-		{
-			Timer timer = new Timer();
+		{			
 		  	timer.startMeasure();
-		  	
-			NeuralNetworkService nns = new NeuralNetworkService(5,1);
-		  	nns.appendLayer(5);
-			
+		  							
 			for(int i = 0; i < 5000; i++)
 			{
 				nns.backpropagate(new TrainingData(normalizedInputHourlyWeatherHistory.get(k), new Object[]{normalizedInputHourlyElectricityConsumption[k]}), 2, 3, false);
@@ -419,7 +418,6 @@ public class Main {
 			System.out.println("Enlapsed Time: " + timer.enlapsedTime()/1000.00 + "s");
 		}
 		
-		NeuralNetworkService nns = new NeuralNetworkService();
 		Object averagePredictionResult = 0.;
 		
 		for(Object o : predictionResultList)
