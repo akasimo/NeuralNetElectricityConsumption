@@ -19,7 +19,7 @@ public class Main {
 	{
 		// predictElectricityConsumption1("2017-01-16", 2015, 5, 12);
 		// predictElectricityConsumption2("2017-01-16", 2015, 5, 12);
-		predictElectricityConsumption3("2017-01-16", 2015, 5, 12);
+		predictElectricityConsumption3("2017-01-20", 2015, 5, 1);
 	}
 	
 	public static void predictElectricityConsumption1(String date, Integer weatherStartYear, Integer numberOfYears, Integer hourOfDay)
@@ -597,11 +597,11 @@ public class Main {
 		/*********************************************CALCULATE PREDICTION*****************************************************/
 		
 		System.out.println("\n\n------------------------------------------------------------------------------------------------\n");
-		System.out.println("Calculating ../..");
+		System.out.println("Calculating ../..\n");
 		
 		ArrayList<List<Object>> predictionPEPResultList = new ArrayList<List<Object>>();
 		List<Object> predictionPEPAverageResultList = new ArrayList<Object>();
-		List<Object> predictionResultList = new ArrayList<Object>();
+		List<Object> predictionPEPYearToYearResultList = new ArrayList<Object>();
 		Object predicitionResult = null;
 		Timer timer = new Timer();
 					
@@ -631,20 +631,17 @@ public class Main {
 			
 			predictionPEPResultList.add(predictionPEPResultTempList);
 			
-			System.out.print("\nResult of backpropagation: ");
-			
-			// Propagate for weather forecast
-			for(Object o : nns.propagate(new TrainingData(normalizedInputHourlyWeatherForecast), 2))
-			{
-				predicitionResult = calculateElectricityConsumption(nonNormalizedinputHourlyElectricityConsumption, o);
-				System.out.println(o + " ~ " + predicitionResult + " MWh");
-				predictionResultList.add(predicitionResult);
-			}
-			
 			timer.endMeasure();
 			System.out.println("Enlapsed Time: " + timer.enlapsedTime()/1000.00 + "s");
 		}
-		
+				
+		// Propagate for weather forecast
+		for(Object o : nns.propagate(new TrainingData(normalizedInputHourlyWeatherForecast), 2))
+		{
+			predicitionResult = calculateElectricityConsumption(nonNormalizedinputHourlyElectricityConsumption, o);
+			System.out.println("\nElectricity consumption prediction result: " + o + " ~ " + predicitionResult + " MWh");
+		}
+				
 		for(int i = 0; i < predictionPEPResultList.get(0).size(); i++)
 		{
 			List<Object> predictionPEPAverageResultTempList = new ArrayList<Object>();
@@ -657,18 +654,23 @@ public class Main {
 			predictionPEPAverageResultList.add(evaluateAveragePredictionValue(predictionPEPAverageResultTempList));
 		}
 		
+		for(int i = 0; i < predictionPEPResultList.size(); i++)
+		{
+			predictionPEPYearToYearResultList.add(predictionPEPResultList.get(i).get(i));
+		}
+		
 		System.out.println();
 		
-		for(int i = 0; i < predictionPEPAverageResultList.size(); i++)
+		for(int i = 0; i < predictionPEPResultList.size(); i++)
 		{		
 			System.out.print("Year: " + weatherStartYear + ":     ");
 			weatherStartYear--;
 			System.out.printf("HD(MWh): %-25s", dailyECHistoryAllYearsPEP.get(i)[hourOfDay -1]);
-			System.out.printf("PRE(MWh): %-25s", predictionPEPAverageResultList.get(i));
-			System.out.println("PERC(%): " + nns.getOcs().multiplyObjects(nns.getOcs().subtractObjects(nns.getOcs().divideObjects(predictionPEPAverageResultList.get(i), dailyECHistoryAllYearsPEP.get(i)[hourOfDay -1]), 1.), 100.));
+			System.out.printf("PRE(MWh): %-25s", predictionPEPYearToYearResultList.get(i));
+			System.out.printf("PERC(): %-25s", nns.getOcs().multiplyObjects(nns.getOcs().subtractObjects(nns.getOcs().divideObjects(predictionPEPYearToYearResultList.get(i), dailyECHistoryAllYearsPEP.get(i)[hourOfDay -1]), 1.), 100.));
+			System.out.printf("PRE_AVG(MWh): %-25s", predictionPEPAverageResultList.get(i));
+			System.out.println("PERC_AVG(%): " + nns.getOcs().multiplyObjects(nns.getOcs().subtractObjects(nns.getOcs().divideObjects(predictionPEPAverageResultList.get(i), dailyECHistoryAllYearsPEP.get(i)[hourOfDay -1]), 1.), 100.));
 		}
-		
-		System.out.println("\nAverage electricity consumption result: " + evaluateAveragePredictionValue(predictionResultList) + " MWh");
 	}
 	
 	private static Object evaluateAveragePredictionValue(List<Object> predictionResultList)
